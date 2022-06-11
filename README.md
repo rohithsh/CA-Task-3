@@ -1,4 +1,4 @@
-Computational Argumentation 2022 -- Assignment 2
+Computational Argumentation 2022 -- Assignment 3
 ================================================
 
 
@@ -32,6 +32,9 @@ To have a unified execution environment for you and us, we also provide a public
     ```shell
     $ docker run --mount type=bind,src="$(pwd)",dst=/mnt --workdir="/mnt" -it registry.webis.de/code-lib/public-images/upb-ca22:1.0 sh -c 'python evaluation.py --gt_bio_path data/test-bio.csv --pred_bio_path predictions.csv'
     ```
+
+### Docker ARM image
+If your machine uses an ARM-based processor, you can use the ARM build of the container, which you can find at `registry.webis.de/code-lib/public-images/upb-ca22:1.0-arm64`. Due to a [bug](https://github.com/opencv/opencv/issues/14884) in sklearn, you need to additionally add the following flag to each docker command: `--env LD_PRELOAD=/usr/local/lib/python3.8/dist-packages/sklearn/__check_build/../../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0`.
 
 
 

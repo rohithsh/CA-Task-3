@@ -1,44 +1,82 @@
+# CA20 Assignment 3 evaluation script; version 2020-06-19
+
 import argparse
+import json
+import pandas as pd
+
+from os import path
 from sklearn.metrics import f1_score
 
 
-def evaluation(path_to_ground_truth_bio, path_to_pred_bio):
-    '''
-    Computing F1-score for each of the major-claim, claim, premises, and non-argumentative classes.
-    '''
+def evaluate_essays(predictions: list, true_labels: list) -> float:
+    """Evaluate the preditions using the f1_score metric. Return the score.
 
-    special_tokens = ['__END_PARAGRAPH__',  '__END_ESSAY__']
+    The order of both input lists does matter and will change the results if different.
+    This wrapper uses the weighted F1 score to accomodate an imbalance in labels.
 
-    # Collect ground-truth and pedicted labels per token
-    gt_bio = [x.split('\t') for x in open(path_to_ground_truth_bio).read().split('\n')]
-    pred_bio = [x.split('\t') for x in open(path_to_pred_bio).read().split('\n')]
-
-    # Filter out tokens that doesn't need labels
-    gt_bio = [x for x in gt_bio if len(x) > 1]
-    pred_bio = [x for x in pred_bio if len(x) > 1]
-
-    # Extract actual labels
-    gt_bio = [x for x in gt_bio if x[0] not in special_tokens]
-    pred_bio = [x for x in pred_bio if x[0] not in special_tokens]
-
-    assert len(gt_bio) == len(pred_bio), 'Number of tokens in the prediction file is different than the ground truth.'
-
-    # F1-score overall tokens..
-    _, gt_y = zip(*gt_bio)
-    _, pred_y = zip(*pred_bio)
-
-    macro_f1_score = f1_score(gt_y, pred_y, average='macro')
-    weighted_f1_score = f1_score(gt_y, pred_y, average='weighted')
-
-    print('Macro F1-Score: ', round(macro_f1_score, 3))
-    print('Weighted F1-Score: ', round(weighted_f1_score, 3))
+    Arguments:
+    predictions -- The list of predicted labels.
+    true_labels -- The actual labels of the essays.
+    """
+    return f1_score(true_labels, predictions)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Evaluate your approach')
-    parser.add_argument('--gt_bio_path')
-    parser.add_argument('--pred_bio_path')
+def main():
+    # Read train-test-splits and get test ids
+    splits = pd.read_csv(SPLITS_PATH, sep=";")
+    test_ids = sorted([int(fn[-3:]) for fn in splits[splits.SET == "TEST"].ID.values])
 
+    #  Read data files from disk
+    with open(ESSAYS_PATH, "r") as f:
+        data = json.load(f)
+    with open(PREDICTIONS_PATH, "r") as f:
+        predictions = json.load(f)
+
+    # Extract prediction labels
+    # Also, make sure they are sorted based on the integer value of their id
+    predictions = sorted(predictions, key=lambda x: int(x["id"]))
+    prediction_labels = [1 if e["confirmation_bias"] else 0 for e in predictions]
+
+    # Extract true labels
+    # Also, make sure they are sorted based on their id
+    y_true = list(filter(lambda x: x["id"] in test_ids, data))
+    y_true = sorted(y_true, key=lambda x: x["id"])
+    y_true_labels = [1 if e["confirmation_bias"] else 0 for e in y_true]
+
+    # Print the final F1 score to console
+    print(f"F1-score: {evaluate_essays(prediction_labels, y_true_labels):.3f}")
+
+
+if __name__ == "__main__":
+    # Parse cli arguments
+    SCRIPT_DESCRIPTION = "Simple script to evaluate the essay prediction output"
+    parser = argparse.ArgumentParser(description=SCRIPT_DESCRIPTION)
+    parser.add_argument(
+        "--corpus",
+        "-c",
+        type=str,
+        required=True,
+        help="Path to the corpus file.",
+        metavar="CORPUS")
+    parser.add_argument(
+        "--predictions",
+        "-p",
+        type=str,
+        required=True,
+        help="Path to the predictions file.",
+        metavar="PREDICTIONS")
+    parser.add_argument(
+        "--split",
+        "-s",
+        type=str,
+        required=True,
+        help="Path to the train-test split definition file.",
+        metavar="SPLIT")
     args = parser.parse_args()
 
-    evaluation(args.gt_bio_path, args.pred_bio_path)
+    # Define all data files paths
+    PREDICTIONS_PATH = args.predictions
+    SPLITS_PATH = args.split
+    ESSAYS_PATH = args.corpus
+
+    main()
