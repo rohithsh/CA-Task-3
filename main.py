@@ -41,7 +41,7 @@ def sentiment_analysis(df, column_name):
     df['scores'] = df[column_name].apply(assign_scores)
     df[['neg', 'neu', 'pos', 'comp']] = pd.DataFrame(df.scores.tolist(), index = df.index)
     return df
-    
+
 def train_test_split(path):
     return train, test
 
@@ -59,7 +59,7 @@ def export_prediction(y_test, y_pred):
     output.to_json('predictions.json', orient='records', indent=3)
     return
 
-    
+
 
 def main():
     path = "data/essay-corpus.json"
@@ -75,7 +75,7 @@ def main():
     premises_df = sentiment_analysis(premises_df, 'premises')
 
     claims = claims_df[['text_id', 'neg', 'neu', 'pos', 'comp']].groupby(['text_id']).sum()
-    maj_claims = majclaims_df[['text_id', 'neg', 'neu', 'pos', 'comp']].groupby(['text_id']).sum() 
+    maj_claims = majclaims_df[['text_id', 'neg', 'neu', 'pos', 'comp']].groupby(['text_id']).sum()
     premises = premises_df[['text_id', 'neg', 'neu', 'pos', 'comp']].groupby(['text_id']).sum()
 
     df1 = pd.merge(claims, maj_claims, on='text_id')
@@ -131,7 +131,7 @@ def main():
     # print(grid_result.best_estimator_)
     # grid_predictions = grid_result.predict(X_test)
     # print(classification_report(y_test, grid_predictions))
-    
+
     pass
 
 
