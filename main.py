@@ -59,7 +59,7 @@ def export_prediction(y_test, y_pred):
     output.to_json('predictions.json', orient='records', indent=3)
     return
 
-def cross_validation(df):
+def cross_validation(df, clf):
     x = df[['neg','pos','neu','comp']]
     y = df['confirmation_bias']
     scores = cross_val_score(clf, x, y,scoring="f1",cv=10)
@@ -109,7 +109,7 @@ def main():
 
     export_prediction(y_test, y_pred)
 
-    scores = cross_validation(final_df)
+    scores = cross_validation(final_df, clf)
     print("10-Fold Cross-Validation")
     print(scores)
 
