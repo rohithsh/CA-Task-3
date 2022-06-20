@@ -59,11 +59,7 @@ def export_prediction(y_test, y_pred):
     output.to_json('predictions.json', orient='records', indent=3)
     return
 
-def cross_validation(df):
-    x = df[['neg','pos','neu','comp']]
-    y = df['confirmation_bias']
-    scores = cross_val_score(clf, x, y,scoring="f1",cv=10)
-    return scores
+    
 
 def main():
     path = "data/essay-corpus.json"
@@ -109,30 +105,32 @@ def main():
 
     export_prediction(y_test, y_pred)
 
-    scores = cross_validation(final_df)
+    x = final_df[['neg','pos','neu','comp']]
+    y = final_df['confirmation_bias']
+    scores = cross_val_score(clf, x, y,scoring="f1",cv=10)
     print("10-Fold Cross-Validation")
     print(scores)
 
     # Hyper Parameter Tuning - Grid Search
-    param_grid = {'C': [50, 10, 1.0, 0.1, 0.01],
-                  'gamma': ['scale'],
-                  'kernel': ['poly', 'rbf', 'sigmoid']}
+    # param_grid = {'C': [50, 10, 1.0, 0.1, 0.01],
+    #               'gamma': ['scale'],
+    #               'kernel': ['poly', 'rbf', 'sigmoid']}
 
-    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
-    grid_search = GridSearchCV(svm.SVC(), param_grid, n_jobs=-1, cv=cv, scoring='accuracy',error_score=0, refit = True, verbose = 3)
-    grid_result = grid_search.fit(X_train, y_train)
+    # cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
+    # grid_search = GridSearchCV(svm.SVC(), param_grid, n_jobs=-1, cv=cv, scoring='accuracy',error_score=0, refit = True, verbose = 3)
+    # grid_result = grid_search.fit(X_train, y_train)
 
-    print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
-    means = grid_result.cv_results_['mean_test_score']
-    stds = grid_result.cv_results_['std_test_score']
-    params = grid_result.cv_results_['params']
-    for mean, stdev, param in zip(means, stds, params):
-        print("%f (%f) with: %r" % (mean, stdev, param))
+    # print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+    # means = grid_result.cv_results_['mean_test_score']
+    # stds = grid_result.cv_results_['std_test_score']
+    # params = grid_result.cv_results_['params']
+    # for mean, stdev, param in zip(means, stds, params):
+    #     print("%f (%f) with: %r" % (mean, stdev, param))
 
-    print(grid_result.best_params_)
-    print(grid_result.best_estimator_)
-    grid_predictions = grid_result.predict(X_test)
-    print(classification_report(y_test, grid_predictions))
+    # print(grid_result.best_params_)
+    # print(grid_result.best_estimator_)
+    # grid_predictions = grid_result.predict(X_test)
+    # print(classification_report(y_test, grid_predictions))
     
     pass
 
